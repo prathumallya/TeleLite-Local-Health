@@ -22,7 +22,11 @@ export async function POST(req:Request){
  }
  if(data.action==='status'){
   if(!['Waiting','In consultation','Reviewed'].includes(data.status))return response({error:'Invalid status'},400);
-  await db.prepare('UPDATE cases SET status=? WHERE id=?').bind(data.status,data.caseId).run();return response({ok:true});
+  const result=await db.prepare("UPDATE cases SET status=? WHERE id=? AND status!='Reviewed' AND status!=?").bind(data.status,data.caseId,data.status).run();
+  const current=await db.prepare('SELECT status FROM cases WHERE id=?').bind(data.caseId).first<{status:string}>();
+  if(!current)return response({error:'Consultation not found'},404);
+  if(current.status==='Reviewed'&&data.status!=='Reviewed')return response({error:'This consultation is already reviewed and cannot be reopened.'},409);
+  return response({ok:true,status:current.status,changed:(result.meta.changes||0)>0});
  }
  if(data.action==='event'){
   if(!['message','note','offer','answer','candidate','hangup'].includes(data.kind)||!['patient','specialist'].includes(data.role)||typeof data.id!=='string'||data.id.length>80||JSON.stringify(data.body).length>60000)return response({error:'Invalid event'},400);
