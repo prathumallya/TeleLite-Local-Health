@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {triage,modeFor} from '../lib/triage.ts';
+assert.equal(triage({symptoms:['Chest pain','Skin concern']}).priority,'Emergency');
+assert.equal(triage({symptoms:['Severe breathing difficulty']}).priority,'Emergency');
+assert.equal(triage({symptoms:['Skin concern']}).specialty,'Dermatology');
+assert.equal(triage({symptoms:['Pregnancy concern']}).specialty,'Maternal care');
+assert.equal(triage({symptoms:['Fever']}).priority,'Priority');
+assert.equal(triage({symptoms:['Follow-up']}).priority,'Routine');
+assert.deepEqual([0,8,29,30,149,150,399,400,600].map(modeFor),[0,1,1,2,2,3,3,4,4]);
+console.log('Passed: emergency precedence, specialty routing, and all bandwidth boundaries.');
